@@ -1,0 +1,23 @@
+@echo off
+
+SET mmfAssets="path_to_mmfAssets"
+
+for %%f in (*.txt) do (
+pandoc -s -S --reference-docx %mmfAssets%\template.docx %%~nf.txt -o %%~nf.docx
+pandoc -s -S --epub-stylesheet %mmfAssets%\ebook.css %%~nf.txt -o %%~nf.epub
+pandoc -s -S --toc -H %mmfAssets%\pandoc.css %%~nf.txt -o %%~nf.html
+pandoc -N --template=%mmfAssets%\template.tex --variable mainfont="Calisto MT" --variable sansfont="Century Gothic" --variable monofont="Consolas" --variable fontsize=11pt %%~nf.txt --latex-engine=xelatex -o %%~nf.pdf
+kindlegen %%~nf.epub
+)
+
+mkdir doc\epub
+move *.epub doc\epub
+
+mkdir doc\mobi
+move *.mobi doc\mobi
+
+mkdir doc\pdf
+move *.pdf doc\pdf
+
+mkdir doc\docx
+move *.docx doc\docx
