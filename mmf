@@ -1,38 +1,72 @@
 @echo off
 
+:: Path to assets
 SET mmfAssets="path_to_assets"
 
+:: Help (iconm help)
+if [%1]==[--help] (
+echo.
+echo **********************************************************
+echo.
+echo mmf :      Make Magic Files
+echo.
+echo                    generates files from markdown
+echo.
+echo mmf is enough. Use -s to generate get started files
+echo.
+goto :eof
+)
+
+:: Load get started document
+if [%1]==[-s] (
+xcopy %mmfAssets%\start /D /E /C /R /I /K /Y
+) else (
+
+:: Move prez files to avoid useless convertions
 mkdir mmfTmp
 move *_prez.txt mmfTmp
 
+:: For each .txt file in repository
 for %%f in (*.txt) do (
+:: Create a word document thanks to a template
 pandoc -s -S --reference-docx %mmfAssets%\world_template.docx %%~nf.txt -o %%~nf.docx
+:: Create an ebook using epub format
 pandoc -s -S --epub-stylesheet %mmfAssets%\ebook.css %%~nf.txt -o %%~nf.epub
+:: Create a html file using material design css
 pandoc -s -S --toc -H %mmfAssets%\pandoc.css %%~nf.txt -o %%~nf.html
+:: Create a pdf using LaTeX
 pandoc -N --template=%mmfAssets%\template.tex %%~nf.txt --latex-engine=xelatex -o %%~nf.pdf
-
+:: Create an ebook using Kindle format
 kindlegen %%~nf.epub
 )
 
-mkdir doc\epub
+:: Move new documents except .html for link reason
+if exist *.epub mkdir doc\epub
 move *.epub doc\epub
 
-mkdir doc\mobi
+if exist *.mobi mkdir doc\mobi
 move *.mobi doc\mobi
 
-mkdir doc\pdf
+if exist *.pdf mkdir doc\pdf
 move *.pdf doc\pdf
 
-mkdir doc\docx
+if exist *.docx mkdir doc\docx
 move *.docx doc\docx
 
+:: prez are now safe. Bring them back
 move mmfTmp\*.txt
 rd mmfTmp
 
-mkdir prezAssets
+:: prez creation
+if exist *_prez.txt mkdir prezAssets
 
-xcopy %mmfAssets%\prezAssets prezAssets\ /D /E /C /R /I /K /Y
+:: copy assets needed by impressjs
+if exist *_prez.txt xcopy %mmfAssets%\prezAssets prezAssets\ /D /E /C /R /I /K /Y
 
+:: Convert txt file to impressjs presentation
 for %%f in (*_prez.txt) do (
 pandoc --template prezAssets\template\impress_template.html -V impress-url=prezAssets\js\impress.js -s -t html5 --section-divs -o %%~nf.html %%~nf.txt
 )
+
+)
+:: End
