@@ -1,6 +1,6 @@
 @echo off
 
-SET mmfAssets="C:\Users\vtexier\Documents\qlikview\project_generation\bat_qv\mmfAssets"
+SET mmfAssets="path_to_assets"
 
 mkdir mmfTmp
 move *_prez.txt mmfTmp
