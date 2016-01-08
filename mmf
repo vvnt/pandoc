@@ -1,16 +1,20 @@
 @echo off
 
-:: Path to assets
-SET mmfAssets="path_to_assets"
+:: Path to script repository
+SET scriptPath=%~dp0
+:: Path to assets for mmf repository
+SET mmfPath=%scriptPath:~0,-1%\mmf
 
-:: Help (iconm help)
+:: Help
 if [%1]==[--help] (
 echo.
 echo **********************************************************
 echo.
-echo mmf :      Make Magic Files
+echo mmf :  Make Magic Files
 echo.
-echo                    generates files from markdown
+echo            generates files from markdown
+echo.
+echo            *_prez.txt files get transformed to impressjs presentations
 echo.
 echo mmf is enough. Use -s to generate get started files
 echo.
@@ -19,7 +23,7 @@ goto :eof
 
 :: Load get started document
 if [%1]==[-s] (
-xcopy %mmfAssets%\start /D /E /C /R /I /K /Y
+xcopy %mmfPath%\start /D /E /C /R /I /K /Y
 ) else (
 
 :: Move prez files to avoid useless convertions
@@ -29,15 +33,15 @@ move *_prez.txt mmfTmp
 :: For each .txt file in repository
 for %%f in (*.txt) do (
 :: Create a word document thanks to a template
-pandoc -s -S --reference-docx %mmfAssets%\world_template.docx %%~nf.txt -o %%~nf.docx
+pandoc -s -S --reference-docx %mmfPath%\template.docx %%~nf.txt -o %%~nf.docx
 :: Create an ebook using epub format
-pandoc -s -S --epub-stylesheet %mmfAssets%\ebook.css %%~nf.txt -o %%~nf.epub
+pandoc -s -S --epub-stylesheet %mmfPath%\ebook.css %%~nf.txt -o %%~nf.epub
 :: Create a html file using material design css
-pandoc -s -S --toc -H %mmfAssets%\pandoc.css %%~nf.txt -o %%~nf.html
+pandoc -s -S --toc -H %mmfPath%\pandoc.css %%~nf.txt -o %%~nf.html
 :: Create a pdf using LaTeX
-pandoc -N --template=%mmfAssets%\template.tex %%~nf.txt --latex-engine=xelatex -o %%~nf.pdf
+pandoc -N --template=%mmfPath%\template.tex %%~nf.txt --latex-engine=xelatex -o %%~nf.pdf
 :: Create an ebook using Kindle format
-kindlegen %%~nf.epub
+:: kindlegen %%~nf.epub
 )
 
 :: Move new documents except .html for link reason
@@ -58,14 +62,14 @@ move mmfTmp\*.txt
 rd mmfTmp
 
 :: prez creation
-if exist *_prez.txt mkdir prezAssets
+if exist *_prez.txt mkdir impressjs
 
 :: copy assets needed by impressjs
-if exist *_prez.txt xcopy %mmfAssets%\prezAssets prezAssets\ /D /E /C /R /I /K /Y
+if exist *_prez.txt xcopy %mmfPath%\impressjs impressjs\ /D /E /C /R /I /K /Y
 
 :: Convert txt file to impressjs presentation
 for %%f in (*_prez.txt) do (
-pandoc --template prezAssets\template\impress_template.html -V impress-url=prezAssets\js\impress.js -s -t html5 --section-divs -o %%~nf.html %%~nf.txt
+pandoc --template impressjs\template\impress_template.html -V impress-url=impressjs\js\impress.js -s -t html5 --section-divs -o %%~nf.html %%~nf.txt
 )
 
 )
